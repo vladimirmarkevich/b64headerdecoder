@@ -3,7 +3,6 @@ package lineprocessor
 import (
 	"encoding/base64"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 )
@@ -49,7 +48,7 @@ func checkIfBase64Continues(str string) bool {
 }
 
 func decode(b64str string) string {
-	log.Println("To Decode: ", b64str)
+	//log.Println("To Decode: ", b64str)
 	dst, err := base64.StdEncoding.DecodeString(b64str)
 	if err != nil {
 		fmt.Println("Error decoding base64: ", err)

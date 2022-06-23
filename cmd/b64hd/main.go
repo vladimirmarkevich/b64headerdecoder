@@ -9,39 +9,69 @@ import (
 )
 
 func main() {
-	fileName := os.Args[1]
-	if len(fileName) == 0 {
-		log.Fatal("First arg has to be file name")
-	} else {
-		log.Println("filename: " + fileName)
-	}
+	var inputReader *os.File
+	var outputWriter *os.File
 
-	file, err := os.Open(fileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
+	outputWriter, inputReader = defineIO()
+	df := func(file *os.File) {
 		err := file.Close()
 		if err != nil {
 			log.Fatal(err)
 		}
-	}()
+	}
+	defer df(outputWriter)
+	defer df(inputReader)
 
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(inputReader)
 	lp := lineprocessor.NewProcessor()
 	for scanner.Scan() {
 		str := scanner.Text()
 		res, ready := lp.ProcessLine(str)
 		if ready {
-			fmt.Println(res)
+			_, err := fmt.Fprintln(outputWriter, res)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
-	err = scanner.Err()
+	err := scanner.Err()
 	if err == nil {
 		log.Println("reached end of file")
 	} else {
 		log.Fatal("")
 	}
+}
+
+func defineIO() (*os.File, *os.File) {
+	var inputReader *os.File
+	var outputWriter *os.File
+
+	if len(os.Args) >= 2 && len(os.Args[1]) != 0 {
+		inputFileName := os.Args[1]
+		log.Println("input file name: " + inputFileName)
+
+		var err error
+		inputReader, err = os.Open(inputFileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if len(os.Args) >= 3 && len(os.Args[2]) != 0 {
+			outputFilename := os.Args[2]
+			log.Println("output file name: ", outputFilename)
+			outputWriter, err = os.Create(outputFilename)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			outputWriter = os.Stdout
+		}
+		return outputWriter, inputReader
+	} else {
+		inputReader = os.Stdin
+		outputWriter = os.Stdout
+	}
+	return outputWriter, inputReader
 }
 
 /*
