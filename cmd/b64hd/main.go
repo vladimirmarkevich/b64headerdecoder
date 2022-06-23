@@ -12,6 +12,10 @@ func main() {
 	var inputReader *os.File
 	var outputWriter *os.File
 
+	if checkForHelpArg() {
+		printUsage()
+		os.Exit(0)
+	}
 	outputWriter, inputReader = defineIO()
 	df := func(file *os.File) {
 		err := file.Close()
@@ -35,22 +39,35 @@ func main() {
 		}
 	}
 	err := scanner.Err()
-	if err == nil {
-		log.Println("reached end of file")
-	} else {
+	if err != nil {
 		log.Fatal("")
 	}
+}
+
+func checkForHelpArg() bool {
+	for _, v := range os.Args {
+		if v == "-h" || v == "--help" {
+			return true
+		}
+	}
+	return false
+}
+
+func printUsage() {
+	fmt.Println("Usage: ", os.Args[0], " [-h, --help] [inputfile] [outputfile]")
+	fmt.Println("Reads input stream, finds 'X-ImunifyEmail-Filter-Info:' following base64 encoded block. " +
+		"Decode the block to output stream and print other data without changes ")
 }
 
 func defineIO() (*os.File, *os.File) {
 	var inputReader *os.File
 	var outputWriter *os.File
+	var err error
 
 	if len(os.Args) >= 2 && len(os.Args[1]) != 0 {
 		inputFileName := os.Args[1]
-		log.Println("input file name: " + inputFileName)
+		//log.Println("input file name: " + inputFileName)
 
-		var err error
 		inputReader, err = os.Open(inputFileName)
 		if err != nil {
 			log.Fatal(err)
@@ -58,7 +75,7 @@ func defineIO() (*os.File, *os.File) {
 
 		if len(os.Args) >= 3 && len(os.Args[2]) != 0 {
 			outputFilename := os.Args[2]
-			log.Println("output file name: ", outputFilename)
+			//log.Println("output file name: ", outputFilename)
 			outputWriter, err = os.Create(outputFilename)
 			if err != nil {
 				log.Fatal(err)
@@ -73,34 +90,3 @@ func defineIO() (*os.File, *os.File) {
 	}
 	return outputWriter, inputReader
 }
-
-/*
-file, err := os.OpenFile(
-        "test.txt",
-        os.O_WRONLY|os.O_TRUNC|os.O_CREATE,
-        0666,
-    )
-
-    // Open file and create a buffered reader on top
-    file, err := os.Open("test.txt")
-    if err != nil {
-        log.Fatal(err)
-    }
-    bufferedReader := bufio.NewReader(file)
-	// Read up to and including delimiter
-    // Returns byte slice
-    dataBytes, err := bufferedReader.ReadBytes('\n')
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Printf("Read bytes: %s\n", dataBytes)
-
-    // Read up to and including delimiter
-    // Returns string
-    dataString, err := bufferedReader.ReadString('\n')
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Printf("Read string: %s\n", dataString)
-
-*/
